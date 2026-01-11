@@ -1,33 +1,33 @@
-# CS-451R-Commerce
-# Budgeting App
+# Commerce Bank Budgeting App
 
-A responsive budgeting web application built with Microsoft Blazor and Entity Framework Core, designed to help users manage their finances effectively. This app is a prototype developed for presentation to Commerce Bank as part of a university class project.
+A responsive, full-stack financial management web application built with Microsoft Blazor and Entity Framework Core. This system was developed as a high-fidelity prototype for Commerce Bank to demonstrate modern budgeting solutions and AI-integrated financial advisory.
 
----
+## Core Features
 
-## Features
-
-- **User Authentication**: Signup, login, and password recovery (prototype using Twilio SendGrid).
-- **Budget Management**: Create and track budgets with details such as start and end dates.
-- **Transaction Logging**: Record and view financial transactions linked to accounts.
-- **AI Financial Advice**: Integrated AI chatbot (Ollama) provides personalized financial tips.
-
----
+* **Secure Authentication:** User lifecycle management including signup, login, and prototype password recovery via Twilio SendGrid.
+* **Dynamic Budgeting:** Robust tracking systems allowing users to create, manage, and monitor budgets across custom date ranges.
+* **Transaction Engine:** Real-time logging and account-linked financial transaction history.
+* **AI Financial Advisor:** Advanced integration with the Ollama AI chatbot to provide personalized, data-driven financial tips.
 
 ## Technology Stack
 
-- **Frontend**: Microsoft Blazor
-- **Backend**: ASP.NET Core
-- **Database**: Local SQL database using Entity Framework Core
-- **External APIs**:
-  - Twilio SendGrid: Email-based password recovery (prototype).
-  - Ollama: AI chatbot for financial advice.
+* **Frontend:** Microsoft Blazor (WebAssembly/Server)
+* **Backend:** ASP.NET Core
+* **ORM/Database:** Entity Framework Core with Local SQL Database integration
+* **External Services:** * Twilio SendGrid (Email Communication)
+    * Ollama (Local LLM for AI Advisory)
 
----
+## System Architecture
+
+The application leverages the **ASP.NET Core** framework to maintain a clean separation between the UI and the data layer. By using **Entity Framework Core**, the system ensures type-safe database queries and scalable data modeling, suitable for financial applications.
+
+
 
 ## Setup Instructions
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-repo/budgeting-app.git
-   cd budgeting-app
+   git clone [https://github.com/greglinv/Commerce-Bank-Budgeting-App.git](https://github.com/greglinv/Commerce-Bank-Budgeting-App.git)
+   cd Commerce-Bank-Budgeting-App
+2. **Database Migration: Ensure LocalDB is installed and run dotnet ef database update.**
+3. **Run Application: Execute dotnet run to launch the Blazor server.**
