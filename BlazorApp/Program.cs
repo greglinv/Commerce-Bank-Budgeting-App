@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Components;
 
 
 var builder = WebApplication.CreateBuilder(args);
+// On Azure App Service, send logs to the App Service log stream / log files
+// (enable via App Service logs > Application logging). No effect when running locally.
+builder.Logging.AddAzureWebAppDiagnostics();
+
 builder.Services.AddDbContextFactory<BlazorAppContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("BlazorAppContext") ?? throw new InvalidOperationException("Connection string 'BlazorAppContext' not found."),

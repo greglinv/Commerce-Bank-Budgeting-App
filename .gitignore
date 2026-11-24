@@ -25,3 +25,7 @@ BlazorApp/obj/
 /BlazorApp/obj/Debug/net8.0/BlazorApp.sourcelink.json
 /BlazorApp/obj/Debug/net8.0/BlazorApp.csproj.FileListAbsolute.txt
 /BlazorApp/bin/Debug/net8.0/BlazorApp.staticwebassets.runtime.json
+
+# Visual Studio publish profiles (may contain deployment credentials)
+**/Properties/PublishProfiles/
+*.pubxml.user

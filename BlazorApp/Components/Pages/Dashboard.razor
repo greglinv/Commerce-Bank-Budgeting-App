@@ -39,6 +39,28 @@
             <h3>@(SelectedAccount != null ? $"Account Details for {SelectedAccount.AccountType}" : "No Account Selected")</h3>
             <h4>Transactions:</h4>
 
+            @if (SelectedAccount == null)
+            {
+                <p>Create a bank account on the <a href="/usersettings">Settings</a> page to start tracking transactions.</p>
+            }
+            else
+            {
+                <!-- Add a transaction to the selected account -->
+                <div class="add-transaction">
+                    <h5>Add a transaction</h5>
+                    <div class="add-transaction-fields">
+                        <input type="date" class="form-control" aria-label="Transaction date" @bind="NewTransactionDate" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <input type="text" class="form-control" aria-label="Merchant" placeholder="Merchant (e.g. Grocery Store)" maxlength="100" @bind="NewTransactionMerchant" />
+                        <input type="number" class="form-control" aria-label="Amount" placeholder="Amount" min="0.01" step="0.01" @bind="NewTransactionAmount" />
+                        <button class="btn btn-success" @onclick="AddTransactionAsync" disabled="@isSaving">Add</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(transactionFormMessage))
+                    {
+                        <div class="add-transaction-message">@transactionFormMessage</div>
+                    }
+                </div>
+            }
+
             @if (Transactions.Any())
             {
                 <div class="transactions-container">
@@ -60,6 +82,10 @@
             else
             {
                 <p>No transactions available for the selected account.</p>
+                @if (SelectedAccount != null)
+                {
+                    <button class="btn btn-outline-success" @onclick="LoadSampleTransactionsAsync" disabled="@isSaving">Load sample transactions</button>
+                }
             }
 
             <!-- Pagination Component -->
@@ -92,6 +118,128 @@
     private int TotalPages { get; set; }
 
     private bool isListView = true;
+
+    /* ADD TRANSACTION / SAMPLE DATA */
+    // Amounts are spending (positive = money out), matching how Goals totals expenditures.
+    private DateTime NewTransactionDate { get; set; } = DateTime.Today;
+    private string? NewTransactionMerchant { get; set; }
+    private decimal? NewTransactionAmount { get; set; }
+    private string? transactionFormMessage;
+    private bool isSaving;
+
+    private async Task AddTransactionAsync()
+    {
+        if (SelectedAccount == null || isSaving) return;
+
+        var merchant = NewTransactionMerchant?.Trim();
+        if (string.IsNullOrEmpty(merchant)) { transactionFormMessage = "Enter a merchant."; return; }
+        if (merchant.Length > 100) { transactionFormMessage = "Merchant must be 100 characters or fewer."; return; }
+        if (NewTransactionAmount is not > 0) { transactionFormMessage = "Enter an amount greater than 0."; return; }
+        if (NewTransactionDate.Date > DateTime.Today) { transactionFormMessage = "The date can't be in the future."; return; }
+
+        isSaving = true;
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var amount = Math.Round(NewTransactionAmount.Value, 2);
+
+            // Spending comes out of the account balance (saved together with the transaction).
+            var account = await context.BankAccount.FindAsync(SelectedAccount.BankAccountId);
+            if (account == null) { transactionFormMessage = "That account no longer exists."; return; }
+            account.AccountBalance -= amount;
+
+            // SaveChangesAsync also adds the amount to any goal on this account whose date range covers it.
+            context.Transaction.Add(new Transaction
+            {
+                AccountId = SelectedAccount.BankAccountId,
+                Merchant = merchant,
+                TransactionAmount = amount,
+                TransactionDate = NewTransactionDate.Date
+            });
+            await context.SaveChangesAsync();
+
+            // Keep the account dropdown's "Balance:" text in sync.
+            SelectedAccount.AccountBalance = account.AccountBalance;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+
+        transactionFormMessage = $"Added ${NewTransactionAmount:0.00} at {merchant}.";
+        NewTransactionMerchant = null;
+        NewTransactionAmount = null;
+        NewTransactionDate = DateTime.Today;
+        currentPageNumber = 1;
+        await RefreshTransactionsAndChartAsync();
+    }
+
+    // Typical monthly spending used to generate demo data: merchant, min amount, max amount, times per month.
+    private static readonly (string Merchant, decimal Min, decimal Max, int PerMonth)[] SampleSpending =
+    {
+        ("Grocery Store", 35m, 140m, 4),
+        ("Gas Station", 30m, 60m, 2),
+        ("Restaurant", 15m, 70m, 3),
+        ("Coffee Shop", 4m, 9m, 3),
+        ("Electric Utility", 80m, 140m, 1),
+        ("Streaming Service", 15.99m, 15.99m, 1),
+        ("Online Retailer", 20m, 120m, 1),
+    };
+
+    private async Task LoadSampleTransactionsAsync()
+    {
+        if (SelectedAccount == null || isSaving) return;
+
+        isSaving = true;
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            // Sample data is past history that the current balance already reflects, so the balance is not changed.
+            // Only fill empty accounts, so a double click can't duplicate the data.
+            if (await context.Transaction.AnyAsync(t => t.AccountId == SelectedAccount.BankAccountId)) return;
+
+            var random = new Random(SelectedAccount.BankAccountId);
+            var today = DateTime.Today;
+            var thisMonth = new DateTime(today.Year, today.Month, 1);
+
+            // The last six months, up to today.
+            for (var monthsBack = 5; monthsBack >= 0; monthsBack--)
+            {
+                var monthStart = thisMonth.AddMonths(-monthsBack);
+                var daysAvailable = monthsBack == 0 ? today.Day : DateTime.DaysInMonth(monthStart.Year, monthStart.Month);
+
+                foreach (var (merchant, min, max, perMonth) in SampleSpending)
+                {
+                    for (var i = 0; i < perMonth; i++)
+                    {
+                        context.Transaction.Add(new Transaction
+                        {
+                            AccountId = SelectedAccount.BankAccountId,
+                            Merchant = merchant,
+                            TransactionAmount = Math.Round(min + (decimal)random.NextDouble() * (max - min), 2),
+                            TransactionDate = monthStart.AddDays(random.Next(daysAvailable))
+                        });
+                    }
+                }
+            }
+            await context.SaveChangesAsync();
+        }
+        finally
+        {
+            isSaving = false;
+        }
+
+        transactionFormMessage = "Loaded six months of sample transaction history. Your current balance is unchanged.";
+        currentPageNumber = 1;
+        await RefreshTransactionsAndChartAsync();
+    }
+
+    private async Task RefreshTransactionsAndChartAsync()
+    {
+        await LoadTransactionsForSelectedAccount();
+        chartData = new ChartData { Labels = GetDefaultDataLabels(12), Datasets = GetDefaultDataSets(1) };
+        await barChart.UpdateAsync(chartData, barChartOptions);
+    }
 
     private async Task OnPageChangedAsync(int newPageNumber)
     {

@@ -408,3 +408,31 @@
     align-items: flex-end;
     height: 100%;
 }
+/* Add-transaction form */
+.add-transaction {
+    margin: 15px 0;
+    padding: 15px 20px;
+    background: #FAFAFB;
+    border: 1px solid #E0E0E0;
+    border-radius: 10px;
+}
+
+    .add-transaction h5 {
+        margin-bottom: 10px;
+    }
+
+.add-transaction-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+    .add-transaction-fields input {
+        flex: 1 1 160px;
+    }
+
+.add-transaction-message {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #262626;
+}
