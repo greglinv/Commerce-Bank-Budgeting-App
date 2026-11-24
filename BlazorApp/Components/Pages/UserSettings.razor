@@ -144,7 +144,7 @@ else
     }
 
     // Bank account properties
-    private BankAccount BankAccount { get; set; } = new();
+    private BankAccount BankAccount { get; set; } = new() { AccountType = "Checking" }; // match the dropdown's default option
 
     private async Task AddBankAccount()
     {

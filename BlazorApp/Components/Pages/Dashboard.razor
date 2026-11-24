@@ -251,7 +251,7 @@
 
         return new BarChartDataset()
             {
-                Label = $"{SelectedAccount.AccountType}",
+                Label = SelectedAccount?.AccountType ?? "No account",
                 Data = GetTransactionData(),
                 BackgroundColor = new List<string> { c.ToRgbString() },
                 BorderColor = new List<string> { c.ToRgbString() },
@@ -292,7 +292,7 @@
 
         return new BarChartDataset()
             {
-                Label = $"{SelectedAccount.AccountType}",
+                Label = SelectedAccount?.AccountType ?? "No account",
                 Data = GetTransactionData(),
                 BackgroundColor = new List<string> { c.ToRgbString() },
                 BorderColor = new List<string> { c.ToRgbString() },

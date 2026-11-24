@@ -25,6 +25,8 @@ The application leverages the **ASP.NET Core** framework to maintain a clean sep
 
 ## Setup Instructions
 
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) and SQL Server LocalDB (installed with Visual Studio).
+
 1. **Clone the Repository**:
    ```bash
    git clone [https://github.com/greglinv/Commerce-Bank-Budgeting-App.git](https://github.com/greglinv/Commerce-Bank-Budgeting-App.git)
@@ -60,7 +62,9 @@ Uses an App Service **Free F1** plan and the **Azure SQL Database free offer**.
    dotnet tool restore
    dotnet ef database update --connection "Server=tcp:<server>.database.windows.net,1433;Database=<db>;User ID=<user>;Password=<password>;Encrypt=True;"
    ```
-3. **Web app:** Create an App Service (Publish: Code, Runtime: .NET, Pricing plan: **Free F1**). Under *Configuration*, turn **Web sockets On** and **ARR affinity On** (required by Blazor Server). Under *Environment variables*, add a connection string named `BlazorAppContext` (type **SQLAzure**) and the `Twilio__*` settings.
+3. **Web app:** Create an App Service (Publish: Code, Runtime stack: **.NET 10 (LTS)**, OS: Windows, Pricing plan: **Free F1**). Under *Configuration*, turn **Web sockets On** (required by Blazor Server). Under *Environment variables*, add a connection string named `BlazorAppContext` (type **SQLAzure**) and the `Twilio__*` settings.
 4. **Publish:** In Visual Studio, right-click the project → **Publish** → Azure → App Service, and pick the web app. (If you use GitHub Actions instead, the project lives in `BlazorApp/`, not the repo root.)
+
+**Azure for Students:** subscriptions can only deploy to a few regions. If creation fails with `RequestDisallowedByAzure`, pick another region (Policy → Assignments → *Allowed resource deployment regions* lists them) and put the database and web app in the same one.
 
 **Free-tier notes:** F1 has no Always On, so the first request after idle is slow; the free database also pauses and resumes (the app retries the connection automatically). F1 allows about 5 concurrent WebSocket connections, i.e. ~5 simultaneous users. There is no Ollama server in Azure, so AI features need `Ollama:Url` pointed at a reachable server.
