@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Twilio;
 @using Twilio.Rest.Verify.V2.Service;
+@inject IConfiguration Configuration
 @rendermode InteractiveServer
 
 <PageTitle>Recovery</PageTitle>
@@ -36,9 +37,18 @@
             return;
         }
 
-        // Initialize Twilio with Account SID and Auth Token
-        string accountSid = "ACd867838db425498a01963f9362bf4efe"; // Replace with your Account SID
-        string authToken = "509d0aa01864a5e90d524cef24e7ba9c";   // Replace with your Auth Token
+        // Twilio credentials come from configuration, never source control.
+        // Locally: dotnet user-secrets set "Twilio:AuthToken" "..."  (see README)
+        // Azure: App Service > Environment variables > Twilio__AccountSid, Twilio__AuthToken, Twilio__VerifyServiceSid
+        var accountSid = Configuration["Twilio:AccountSid"];
+        var authToken = Configuration["Twilio:AuthToken"];
+        var verifyServiceSid = Configuration["Twilio:VerifyServiceSid"];
+
+        if (string.IsNullOrWhiteSpace(accountSid) || string.IsNullOrWhiteSpace(authToken) || string.IsNullOrWhiteSpace(verifyServiceSid))
+        {
+            Message = "Account recovery email is not configured on this server.";
+            return;
+        }
 
         TwilioClient.Init(accountSid, authToken);
 
@@ -48,7 +58,7 @@
             var verification = await VerificationResource.CreateAsync(
                 channel: "email",
                 to: UserEmail,
-                pathServiceSid: "VA28de569231d1b0f7f2930ec95a75e51c" // Replace with your Service SID
+                pathServiceSid: verifyServiceSid
             );
 
             Message = $"A recovery email has been sent to {UserEmail}.";

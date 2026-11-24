@@ -10,13 +10,16 @@ namespace BlazorApp.Services
     {
         private readonly OllamaApiClient _client;
 
-        public OllamaService()
+        public OllamaService(IConfiguration configuration)
         {
-            // Connect to the local Ollama server
-            var uri = new Uri("http://localhost:11434");
-            _client = new OllamaApiClient(uri)
+            // Ollama server URL and model come from configuration ("Ollama:Url", "Ollama:Model").
+            // Defaults target a local Ollama install. A hosted deployment (e.g. Azure App Service)
+            // has no local Ollama, so point "Ollama:Url" at a reachable server or AI features will return errors.
+            var url = configuration["Ollama:Url"] ?? "http://localhost:11434";
+            var model = configuration["Ollama:Model"] ?? "llama3.2";
+            _client = new OllamaApiClient(new Uri(url))
             {
-                SelectedModel = "llama3.2" // Replace with your desired model
+                SelectedModel = model
             };
         }
 
